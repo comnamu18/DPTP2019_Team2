@@ -358,6 +358,10 @@ public class Document extends Element {
 
                     prependChild(decl);
                 }
+            } else if (syntax == OutputSettings.Syntax.json) {
+            	Node node = childNodes().get(0);
+            	
+            	
             }
         }
     }
@@ -370,7 +374,7 @@ public class Document extends Element {
         /**
          * The output serialization syntax.
          */
-        public enum Syntax {html, xml}
+        public enum Syntax {html, xml, json}
 
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
         private Charset charset;
@@ -465,6 +469,7 @@ public class Document extends Element {
         /**
          * Set the document's output syntax. Either {@code html}, with empty tags and boolean attributes (etc), or
          * {@code xml}, with self-closing tags.
+         * {@code json} is added by KimSangHeon
          * @param syntax serialization syntax
          * @return the document's output settings, for chaining
          */

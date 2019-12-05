@@ -215,4 +215,13 @@ public class Parser {
     public static Parser xmlParser() {
         return new Parser(new XmlTreeBuilder());
     }
+    
+    /**
+     * Create a new JSON parser. This parser assumes no knowledge of the incoming tags and does not treat it as HTML,
+     * rather creates a simple tree directly from the input.
+     * @return a new simple JSON parser.
+     */
+    public static Parser jsonParser() {
+        return new Parser(new JsonTreeBuilder());
+    }
 }

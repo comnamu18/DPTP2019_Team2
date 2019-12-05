@@ -17,7 +17,6 @@ abstract class Token {
     String tokenType() {
         return this.getClass().getSimpleName();
     }
-
     /**
      * Reset the data represent by this token, for reuse. Prevents the need to create transfer objects for every
      * piece of data, which immediately get GCed.
