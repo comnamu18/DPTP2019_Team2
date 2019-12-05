@@ -266,6 +266,30 @@ public final class CharacterReader {
         return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
     }
 
+    String consumeValueData() {
+        // ',', '}', ']', null, ' '
+        //bufferUp(); // no need to bufferUp, just called consume()
+        int pos = bufPos;
+        final int start = pos;
+        final int remaining = bufLength;
+        final char[] val = charBuf;
+
+        OUTER: while (pos < remaining) {
+            switch (val[pos]) {
+                case ',':
+                case ']':
+                case '}':
+                case ' ':
+                case TokeniserState.nullChar:
+                    break OUTER;
+                default:
+                    pos++;
+            }
+        }
+        bufPos = pos;
+        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+    }
+
     String consumeTagName() {
         // '\t', '\n', '\r', '\f', ' ', '/', '>', nullChar
         // NOTE: out of spec, added '<' to fix common author bugs
@@ -285,6 +309,32 @@ public final class CharacterReader {
                 case '/':
                 case '>':
                 case '<':
+                case TokeniserState.nullChar:
+                    break OUTER;
+            }
+            pos++;
+        }
+
+        bufPos = pos;
+        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+    }
+
+    String consumeKeyName() {
+        // '\t', '\n', '\r', '\f', ' ', '"', nullChar
+        bufferUp();
+        int pos = bufPos;
+        final int start = pos;
+        final int remaining = bufLength;
+        final char[] val = charBuf;
+
+        OUTER: while (pos < remaining) {
+            switch (val[pos]) {
+                case '\t':
+                case '\n':
+                case '\r':
+                case '\f':
+                case ' ':
+                case '"':
                 case TokeniserState.nullChar:
                     break OUTER;
             }

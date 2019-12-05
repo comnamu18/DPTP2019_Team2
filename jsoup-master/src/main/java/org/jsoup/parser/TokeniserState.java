@@ -10,6 +10,10 @@ enum TokeniserState {
         // in data state, gather characters until a character reference or tag is found
         void read(Tokeniser t, CharacterReader r) {
             switch (r.current()) {
+	            case '{':
+	            case '[':
+	            	t.advanceTransition(JsonData);
+	            	break;
                 case '&':
                     t.advanceTransition(CharacterReferenceInData);
                     break;
@@ -29,6 +33,121 @@ enum TokeniserState {
                     break;
             }
         }
+    },
+    JsonData {
+    	void read(Tokeniser t, CharacterReader r) {
+    		switch (r.current()) {
+    		case '\n':
+    		case '\t':
+    		case ' ':
+    			r.consume();
+    			break;
+    		case '"':
+            	t.advanceTransition(KeyOpen);
+            	break;
+            default:
+                t.error(this);
+                t.transition(Data);    
+                break;
+    		}
+    	}
+    },
+    KeyOpen {
+    	void read(Tokeniser t, CharacterReader r) {
+            if (r.matchesLetter()) {
+                t.createTagPending(true);
+                t.transition(KeyName);
+            } else {
+                t.error(this);
+                t.transition(Data);
+            }
+    	}
+    },
+    KeyName {
+    	// from {" in data, will have start or end key pending
+        void read(Tokeniser t, CharacterReader r) {
+            // previous KeyOpen state did NOT consume, will have a letter char in current
+            String keyName = r.consumeKeyName();
+            t.tagPending.appendTagName(keyName);
+            char c = r.consume();
+            switch (c) {
+                case '\t':
+                case '\n':
+                case '\r':
+                case '\f':
+                case ' ':
+                    t.transition(BeforeAttributeName);
+                    break;
+                case '{':
+                	t.transition(JsonData);
+                    break;
+                case '"':
+                    t.emitTagPending();
+                    t.transition(ValueData);
+                    break;
+                case nullChar:
+                case eof:
+                    t.eofError(this);
+                    t.transition(Data);
+                    break;
+                default: // buffer underrun
+                    t.tagPending.appendTagName(c);
+            }
+        }
+    },
+    ValueData {
+    	void read(Tokeniser t, CharacterReader r) {
+    		switch (r.current()) {
+    		case ' ':
+    		case '\n':
+    		case '\t':
+    			r.consume();
+    			break;
+            case ':':
+            	t.advanceTransition(ValueOpen);
+            	break;
+            default:
+                t.error(this);
+                t.transition(Data);    
+                break;
+    		}
+    	}
+    },
+    ValueOpen {
+    	void read(Tokeniser t, CharacterReader r) {
+            switch (r.current()) {
+	            case ' ':
+	    		case '\n':
+	    		case '\t':
+	    			r.consume();
+	    			break;
+	    		default :
+	                t.createTagPending(true);
+	                t.transition(ValueName);	    				
+            }
+    	}
+    },
+    ValueName {
+    	void read(Tokeniser t, CharacterReader r) {
+            String data = r.consumeValueData();
+            t.emit(data);
+            
+            char c = r.consume();
+    		switch (c) {
+    		case '}':
+    		case ']':
+    			t.transition(Data);
+    			break;
+    		case ',':
+    			t.createTagPending(false);
+    			t.transition(JsonData);
+            	break;
+            default:
+                t.error(this);
+                t.transition(Data);    
+                break;
+    		}
+    	}
     },
     CharacterReferenceInData {
         // from & in data
