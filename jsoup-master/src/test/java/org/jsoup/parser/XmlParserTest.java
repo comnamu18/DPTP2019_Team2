@@ -7,12 +7,13 @@ import org.jsoup.select.Elements;
 
 public class XmlParserTest {
 	public static void main(String[] args)throws Exception{
-		Document doc = Jsoup.connect("https://mportal.cau.ac.kr/main.do").get();
-		for (Element e : doc.select("main")) {
+		//String html = "<tests><test><id>xxx</id><status>xxx</status></test><test><id>xxx</id><status>xxx</status></test></tests></xml>";
+		String html = "<test/>1</test><tes>2</tes>";
+		Document doc = Jsoup.parse(html, "", Parser.xmlParser());
+		for (Element e : doc.select("test")) {
 		    System.out.println(e);
 		}
-		Elements titles = doc.select("div.nb-main-footer div.nb-footer-info ul li");
-		for (Element e: titles) {
+		for (Element e : doc.select("tes")) {
 		    System.out.println(e);
 		}
 	}
