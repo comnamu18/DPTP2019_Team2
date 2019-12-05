@@ -2,6 +2,7 @@ package org.jsoup.parser;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.jsoup.helper.Validate;
@@ -19,6 +20,8 @@ import org.jsoup.nodes.TextNode;
  * @author KimSangHeon, ChooJangYeon, CheonJoKyo, ImgiChan
  */
 public class JsonTreeBuilder extends TreeBuilder {
+	private ArrayList<String> keyList = new ArrayList<>();
+	
 	ParseSettings defaultSettings() {
 		return ParseSettings.preserveCase;
 	}
@@ -55,9 +58,6 @@ public class JsonTreeBuilder extends TreeBuilder {
             case StartTag:
                 insert(token.asStartTag());
                 break;
-            case EndTag:
-                popStackToClose(token.asEndTag());
-                break;
             case Character:
                 insert(token.asCharacter());
                 break;
@@ -75,7 +75,7 @@ public class JsonTreeBuilder extends TreeBuilder {
     
     Element insert(Token.StartTag startTag) {
         Tag tag = Tag.valueOf(startTag.name(), settings);
-        
+        keyList.add(startTag.name());
         startTag.attributes.deduplicate(settings);
 
         Element el = new Element(tag, baseUri, settings.normalizeAttributes(startTag.attributes));
@@ -92,6 +92,7 @@ public class JsonTreeBuilder extends TreeBuilder {
     void insert(Token.Character token) {
         final String data = token.getData();
         insertNode(new TextNode(data));
+        popStackToClose();
     }
     
     /**
@@ -100,8 +101,8 @@ public class JsonTreeBuilder extends TreeBuilder {
      *
      * @param endTag tag to close
      */
-    private void popStackToClose(Token.EndTag endTag) {
-        String elName = settings.normalizeTag(endTag.tagName);
+    private void popStackToClose() {
+        String elName = settings.normalizeTag(keyList.remove(keyList.size() - 1));
         Element firstFound = null;
 
         for (int pos = stack.size() -1; pos >= 0; pos--) {

@@ -122,7 +122,6 @@ enum TokeniserState {
 	    			r.consume();
 	    			break;
 	    		default :
-	                t.createTagPending(true);
 	                t.transition(ValueName);	    				
             }
     	}
@@ -132,15 +131,13 @@ enum TokeniserState {
             String data = r.consumeValueData();
             t.emit(data);
             
-            char c = r.consume();
-    		switch (c) {
+    		switch (r.current()) {
     		case '}':
     		case ']':
-    			t.transition(Data);
+    			t.advanceTransition(Data);
     			break;
     		case ',':
-    			t.createTagPending(false);
-    			t.transition(JsonData);
+    			t.advanceTransition(JsonData);
             	break;
             default:
                 t.error(this);
