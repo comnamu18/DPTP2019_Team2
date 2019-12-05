@@ -23,37 +23,11 @@ enum TokeniserState {
                 case eof:
                     t.emit(new Token.EOF());
                     break;
-                case '[':
-                	t.advanceTransition(JsonArrayData);
-                	break;
-                case '{':
-                	t.advanceTransition(JsonData);
-                	break;
                 default:
                     String data = r.consumeData();
                     t.emit(data);
                     break;
             }
-        }
-    },
-    JsonArrayData {
-    	void read(Tokeniser t, CharacterReader r) {
-    		String data = r.consumeData();
-    		t.emit(data);
-    	}
-    },
-    JsonData {
-        void read(Tokeniser t, CharacterReader r) {
-        	switch (r.current()) {
-	            case '"':
-	            	t.advanceTransition(KeyName);
-	                break;
-	            default:
-	                t.error(this);
-	                t.emit('{'); // char that got us here
-	                t.transition(Data);
-	                break;
-        	}
         }
     },
     CharacterReferenceInData {
@@ -163,77 +137,6 @@ enum TokeniserState {
                 t.advanceTransition(BogusComment);
             }
         }
-    },
-    KeyOpen {
-        // from {" in data
-        void read(Tokeniser t, CharacterReader r) {
-            t.createTagPending(true);
-            t.transition(KeyName);
-        }
-    },
-    KeyName {
-        // from { or [ in data, will have start or end tag pending
-        void read(Tokeniser t, CharacterReader r) {
-            // previous TagOpen state did NOT consume, will have a letter char in current
-            String keyName = r.consumeTagName();
-            t.tagPending.appendTagName(keyName);
-
-            char c = r.consume();
-            switch (c) {
-                case '\t':
-                case '\n':
-                case '\r':
-                case '\f':
-                case ' ':
-                    t.transition(BeforeAttributeName);
-                    break;
-                case '"':
-                    t.emitTagPending();
-                    t.transition(ValueOpen);
-                    break;
-                case nullChar: // replacement
-                    t.tagPending.appendTagName(replacementStr);
-                    break;
-                case eof: // should emit pending tag?
-                    t.eofError(this);
-                    t.transition(Data);
-                    break;
-                default: // buffer underrun
-                    t.tagPending.appendTagName(c);
-            }
-        }    	
-    },
-    ValueOpen {
-        void read(Tokeniser t, CharacterReader r) {
-            switch (r.current()) {
-            	case ' ':
-            		t.transition(BeforeAttributeName);
-            		break;
-	            case ':':
-	                t.advanceTransition(ValueData);
-	                break;
-	            default:
-	            	t.error(this); // NOT replacement character (oddly?)
-                    t.emit(r.consume());
-            }
-        }    	
-    },
-    ValueData {
-        void read(Tokeniser t, CharacterReader r) {
-            switch (r.current()) {
-	            case ',':
-	                t.emitTagPending();
-	            	t.transition(JsonData);
-	                break;
-	            case '}':
-	                t.emitTagPending();
-	            	t.transition(Data);       	
-	            	break;
-	            default:
-                    String data = r.consumeData();
-                    t.emit(data);
-            }
-        }    	
     },
     TagName {
         // from < or </ in data, will have start or end tag pending
