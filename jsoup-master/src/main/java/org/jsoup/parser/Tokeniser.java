@@ -35,6 +35,7 @@ final class Tokeniser {
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
     private Token emitPending; // the token we are about to emit on next read
     private boolean isEmitPending = false;
+    private int jsonArrayCount = 0;
     private String charsString = null; // characters pending an emit. Will fall to charsBuilder if more than one
     private StringBuilder charsBuilder = new StringBuilder(1024); // buffers characters to output as one token, if more than one emit per read
     StringBuilder dataBuffer = new StringBuilder(1024); // buffers data looking for </script>
@@ -207,6 +208,15 @@ final class Tokeniser {
     Token.Tag createTagPending(boolean start) {
         tagPending = start ? startPending.reset() : endPending.reset();
         return tagPending;
+    }
+    void addJsonArray() {
+    	jsonArrayCount++;
+    }
+    void closeJsonArray() {
+    	jsonArrayCount--;
+    }
+    int jsonArrayCount() {
+    	return jsonArrayCount;
     }
 
     void emitTagPending() {

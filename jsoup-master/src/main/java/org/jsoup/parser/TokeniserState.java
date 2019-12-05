@@ -10,8 +10,9 @@ enum TokeniserState {
         // in data state, gather characters until a character reference or tag is found
         void read(Tokeniser t, CharacterReader r) {
             switch (r.current()) {
-	            case '{':
-	            case '[':
+            	case '[':
+            		t.addJsonArray();
+            	case '{':
 	            	t.advanceTransition(JsonData);
 	            	break;
                 case '&':
@@ -121,24 +122,65 @@ enum TokeniserState {
 	    		case '\t':
 	    			r.consume();
 	    			break;
-	    		default :
+	    		default:
 	                t.transition(ValueName);	    				
             }
     	}
     },
     ValueName {
     	void read(Tokeniser t, CharacterReader r) {
-            String data = r.consumeValueData();
-            t.emit(data);
-            
-    		switch (r.current()) {
-    		case '}':
-    		case ']':
-    			t.advanceTransition(Data);
-    			break;
-    		case ',':
+    		if (r.current() == '{') {
     			t.advanceTransition(JsonData);
-            	break;
+    		}
+    		else if (r.current() == '[') {
+    			t.addJsonArray();
+    			t.advanceTransition(JsonData);
+    		}
+    		else {
+                String data = r.consumeValueData();
+                t.emit(data);
+        		switch (r.current()) {
+        		case ']':
+        			t.closeJsonArray();
+        		case '}':
+        			t.emit(new Token.EndTag());
+        			t.advanceTransition(RecurrentJsonCheck);
+        			break;
+        		case ',':
+        			t.emit(new Token.EndTag());
+        			t.advanceTransition(JsonData);
+                	break;
+                default:
+                    t.error(this);
+                    t.transition(Data);    
+                    break;
+        		}
+    		}
+    	}
+    },
+    RecurrentJsonCheck {
+    	void read(Tokeniser t, CharacterReader r) {
+    		switch(r.current()) {
+    		case ' ':
+    		case '\n':
+    		case '\t':
+    			r.consume();
+    			break;    			
+    		case ',':
+    			if (t.jsonArrayCount() == 0) {
+        			t.emit(new Token.EndTag());    				
+    			}
+    			t.advanceTransition(JsonData);
+    			break;
+    		case ']':
+    			t.closeJsonArray();
+    		case '}':
+    			t.emit(new Token.EndTag());
+    			t.advanceTransition(RecurrentJsonCheck);
+    			break;
+            case eof:
+                t.emit(new Token.EOF());
+                break;
             default:
                 t.error(this);
                 t.transition(Data);    

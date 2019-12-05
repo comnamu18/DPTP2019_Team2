@@ -58,6 +58,9 @@ public class JsonTreeBuilder extends TreeBuilder {
             case StartTag:
                 insert(token.asStartTag());
                 break;
+            case EndTag:
+            	popStackToClose();
+            	break;
             case Character:
                 insert(token.asCharacter());
                 break;
@@ -92,7 +95,6 @@ public class JsonTreeBuilder extends TreeBuilder {
     void insert(Token.Character token) {
         final String data = token.getData();
         insertNode(new TextNode(data));
-        popStackToClose();
     }
     
     /**

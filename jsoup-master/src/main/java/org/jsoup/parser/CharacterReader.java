@@ -267,7 +267,7 @@ public final class CharacterReader {
     }
 
     String consumeValueData() {
-        // ',', '}', '}', ']', null, ' '
+        // ',', '}', '}', ']', null
         //bufferUp(); // no need to bufferUp, just called consume()
         int pos = bufPos;
         final int start = pos;
@@ -279,7 +279,6 @@ public final class CharacterReader {
                 case ',':
                 case ']':
                 case '}':
-                case ' ':
                 case '{':
                 case '[':
                 case TokeniserState.nullChar:
