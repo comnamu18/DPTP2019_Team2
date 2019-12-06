@@ -40,6 +40,7 @@ enum TokeniserState {
     		switch (r.current()) {
     		case '\n':
     		case '\t':
+    		case '\r':
     		case ' ':
     			r.consume();
     			break;
@@ -100,6 +101,7 @@ enum TokeniserState {
     	void read(Tokeniser t, CharacterReader r) {
     		switch (r.current()) {
     		case ' ':
+    		case '\r':
     		case '\n':
     		case '\t':
     			r.consume();
@@ -119,6 +121,7 @@ enum TokeniserState {
             switch (r.current()) {
 	            case ' ':
 	    		case '\n':
+	    		case '\r':
 	    		case '\t':
 	    			r.consume();
 	    			break;
@@ -163,6 +166,7 @@ enum TokeniserState {
     		switch(r.current()) {
     		case ' ':
     		case '\n':
+    		case '\r':
     		case '\t':
     			r.consume();
     			break;    			
@@ -183,7 +187,7 @@ enum TokeniserState {
                 break;
             default:
                 t.error(this);
-                t.transition(Data);    
+                t.transition(Data);
                 break;
     		}
     	}
