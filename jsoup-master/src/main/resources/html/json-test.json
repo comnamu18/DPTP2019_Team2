@@ -1,0 +1,9 @@
+{
+   "data": {
+      "id": "X12",
+      "from": {
+         "name": "John Kennedy", "id": "1458633"
+      },
+      "message": "JSON is much easier and better than XML"
+   }
+}
